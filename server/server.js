@@ -78,9 +78,19 @@ app.use("/api/form", contactRoute);
 
 app.use(errorMiddleware)
 
-const PORT = 8000;  //create
+const PORT = process.env.PORT || 5000;  //create (use env var when provided)
 
 connectDb().then(() => {
+  // handle common listen errors (useful during development)
+  server.on('error', (err) => {
+    if (err && err.code === 'EADDRINUSE') {
+      console.error(`Port ${PORT} is already in use. Stop the process using that port or set a different PORT.`);
+      process.exit(1);
+    }
+    console.error('Server error:', err);
+    process.exit(1);
+  });
+
   server.listen(PORT, () => { //listen via http server for socket.io
     console.log(`server is running at port: ${PORT}`);
   });
