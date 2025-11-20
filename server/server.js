@@ -60,15 +60,7 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// Serve client build in production
-const rootDir = path.resolve();
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(rootDir, "../client/dist")));
-
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(rootDir, "../client/dist/index.html"));
-  });
-}
+// Note: production static serving is mounted after API routes below to avoid intercepting API requests.
 
 //? app.use(express.json( ));: •This line of, code adds Express middleware that •parses•incoming request bodies with JSON payloads. It is important to place this before•any routes •that • need to handle JSON data in the request body. •This middleware is responsible for parsing JSON data• from• requests, •and it should be applied at the beginning of your middleware stack to ensure it's available for all subsequent route handlers.
 
@@ -100,6 +92,17 @@ safeMount("/api/users", usersRoute);
 app.use("/api/analytics", analyticsRoute);
 app.use("/api/messages", messageRoute);
 app.use("/api/form", contactRoute);
+
+// Serve client build in production (after API routes)
+const rootDir = path.resolve();
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(rootDir, "../client/dist")));
+
+  // Express 5 uses path-to-regexp v6; use "/*" instead of "*" for catch-all
+  app.get("/*", (req, res) => {
+    res.sendFile(path.join(rootDir, "../client/dist/index.html"));
+  });
+}
 
 app.use(errorMiddleware)
 
