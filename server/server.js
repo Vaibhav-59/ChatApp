@@ -1,4 +1,5 @@
 require("dotenv").config();
+const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const app = express();
@@ -46,6 +47,16 @@ app.use(cors(corsOptions));
 // Allow larger payloads for base64 images (avatars)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Serve client build in production
+const rootDir = path.resolve();
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(rootDir, "../client/dist")));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(rootDir, "../client/dist/index.html"));
+  });
+}
 
 //? app.use(express.json( ));: •This line of, code adds Express middleware that •parses•incoming request bodies with JSON payloads. It is important to place this before•any routes •that • need to handle JSON data in the request body. •This middleware is responsible for parsing JSON data• from• requests, •and it should be applied at the beginning of your middleware stack to ensure it's available for all subsequent route handlers.
 
