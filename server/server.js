@@ -15,11 +15,23 @@ const io = new Server(server, { cors: { origin: socketAllowedOrigins, methods: [
 const { setIO } = require("./utils/socket");
 setIO(io);
 
-const authRoute = require("./router/auth-router");
-const contactRoute = require("./router/contact-router");
-const usersRoute = require("./router/users-router");
-const analyticsRoute = require("./router/analytics-router");
-const messageRoute = require("./router/message-router");
+// safer require to surface which module fails during startup (helps with path-to-regexp errors)
+function safeRequire(modulePath) {
+  try {
+    const mod = require(modulePath);
+    console.log(`Required module: ${modulePath}`);
+    return mod;
+  } catch (err) {
+    console.error(`Failed to require module '${modulePath}':`, err);
+    throw err;
+  }
+}
+
+const authRoute = safeRequire("./router/auth-router");
+const contactRoute = safeRequire("./router/contact-router");
+const usersRoute = safeRequire("./router/users-router");
+const analyticsRoute = safeRequire("./router/analytics-router");
+const messageRoute = safeRequire("./router/message-router");
 const connectDb = require("./utils/db");
 const errorMiddleware = require("./middlewares/error-middleware");
 
@@ -60,9 +72,22 @@ if (process.env.NODE_ENV === "production") {
 
 //? app.use(express.json( ));: •This line of, code adds Express middleware that •parses•incoming request bodies with JSON payloads. It is important to place this before•any routes •that • need to handle JSON data in the request body. •This middleware is responsible for parsing JSON data• from• requests, •and it should be applied at the beginning of your middleware stack to ensure it's available for all subsequent route handlers.
 
-app.use("/api/auth", authRoute);
+// Mount routers with a small wrapper to surface which mount fails with path-to-regexp errors
+function safeMount(prefix, router, verb = 'use') {
+  try {
+    if (verb === 'use') app.use(prefix, router);
+    else if (verb === 'get') app.get(prefix, router);
+    else app.use(prefix, router);
+    console.log(`Mounted route: ${prefix}`);
+  } catch (err) {
+    console.error(`Failed to mount route '${prefix}':`, err);
+    throw err; // rethrow so startup still fails, but with clearer log
+  }
+}
 
-app.use("/api/users", usersRoute);
+safeMount("/api/auth", authRoute);
+
+safeMount("/api/users", usersRoute);
 
 // app.get("/", (req,res) => { //programe
 //   res.status(200).send("Welcome to world best mern series by vaibhav technical");
