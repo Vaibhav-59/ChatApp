@@ -1,0 +1,76 @@
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const app = express();
+const http = require("http");
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+// Allow socket origins; include common Vite ports (5173, 5174)
+const socketAllowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+];
+const io = new Server(server, { cors: { origin: socketAllowedOrigins, methods: ["GET", "POST"] } });
+const { setIO } = require("./utils/socket");
+setIO(io);
+
+const authRoute = require("./router/auth-router");
+const contactRoute = require("./router/contact-router");
+const usersRoute = require("./router/users-router");
+const analyticsRoute = require("./router/analytics-router");
+const messageRoute = require("./router/message-router");
+const connectDb = require("./utils/db");
+const errorMiddleware = require("./middlewares/error-middleware");
+
+//let's tackle cors
+// CORS for HTTP routes: allow the dev origins used by Vite (5173/5174).
+const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
+const corsOptions = {
+  origin: function (origin, callback) {
+    // allow requests with no origin (like curl, server-to-server)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+
+// Allow larger payloads for base64 images (avatars)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+//? app.use(express.json( ));: •This line of, code adds Express middleware that •parses•incoming request bodies with JSON payloads. It is important to place this before•any routes •that • need to handle JSON data in the request body. •This middleware is responsible for parsing JSON data• from• requests, •and it should be applied at the beginning of your middleware stack to ensure it's available for all subsequent route handlers.
+
+app.use("/api/auth", authRoute);
+
+app.use("/api/users", usersRoute);
+
+// app.get("/", (req,res) => { //programe
+//   res.status(200).send("Welcome to world best mern series by vaibhav technical");
+// });
+
+// app.get("/register", (req,res) => { //programe
+//   res.status(200).send("Welcome to registration page");
+// });
+
+app.use("/api/analytics", analyticsRoute);
+app.use("/api/messages", messageRoute);
+app.use("/api/form", contactRoute);
+
+app.use(errorMiddleware)
+
+const PORT = 8000;  //create
+
+connectDb().then(() => {
+  server.listen(PORT, () => { //listen via http server for socket.io
+    console.log(`server is running at port: ${PORT}`);
+  });
+});
