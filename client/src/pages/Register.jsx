@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "./store/auth";
 import { toast } from "react-hot-toast";
 
-const URL = "http://localhost:8000/api/auth/register";
+const URL = "http://localhost:5000/api/auth/register";
 
 export const Register = () => {
   const [user, setUser] = useState({
