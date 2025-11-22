@@ -94,13 +94,14 @@ app.use("/api/messages", messageRoute);
 app.use("/api/form", contactRoute);
 
 // Serve client build in production (after API routes)
-const clientPath = path.join(__dirname, "client", "dist");
+const clientDistPath = path.resolve(__dirname, "..", "client", "dist");
 
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(clientPath));
+  app.use(express.static(clientDistPath));
 
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(clientPath, "index.html"));
+  // Use a regex literal catch-all to avoid path-to-regexp string parsing issues
+  app.get(/.*/, (req, res) => {
+    res.sendFile(path.join(clientDistPath, "index.html"));
   });
 }
 
