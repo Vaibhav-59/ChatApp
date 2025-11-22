@@ -64,7 +64,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Explicitly handle preflight for all routes
-app.options('*', cors(corsOptions));
+app.options('/.*/', cors(corsOptions));
 
 // Allow larger payloads for base64 images (avatars)
 app.use(express.json({ limit: '10mb' }));
