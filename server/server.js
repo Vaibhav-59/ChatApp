@@ -10,7 +10,9 @@ const { Server } = require("socket.io");
 const socketAllowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
-];
+  'https://delightful-muffin-3a28d8.netlify.app',
+  process.env.CLIENT_ORIGIN,
+].filter(Boolean);
 const io = new Server(server, { cors: { origin: socketAllowedOrigins, methods: ["GET", "POST"] } });
 const { setIO } = require("./utils/socket");
 setIO(io);
@@ -36,8 +38,13 @@ const connectDb = require("./utils/db");
 const errorMiddleware = require("./middlewares/error-middleware");
 
 //let's tackle cors
-// CORS for HTTP routes: allow the dev origins used by Vite (5173/5174).
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
+// CORS for HTTP routes: allow the dev origins used by Vite (5173/5174) and deployed client(s)
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'https://delightful-muffin-3a28d8.netlify.app',
+  process.env.CLIENT_ORIGIN,
+].filter(Boolean);
 const corsOptions = {
   origin: function (origin, callback) {
     // allow requests with no origin (like curl, server-to-server)
@@ -55,6 +62,9 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// Explicitly handle preflight for all routes
+app.options('*', cors(corsOptions));
 
 // Allow larger payloads for base64 images (avatars)
 app.use(express.json({ limit: '10mb' }));
@@ -104,6 +114,7 @@ if (process.env.NODE_ENV === "production") {
     res.sendFile(path.join(clientDistPath, "index.html"));
   });
 }
+
 
 app.use(errorMiddleware)
 
