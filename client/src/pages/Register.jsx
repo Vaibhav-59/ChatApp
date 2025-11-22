@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "./store/auth";
 import { toast } from "react-hot-toast";
 
-const URL = "https://chatapp-4-jiaz.onrender.com/api/auth/register";
+const URL = "https://chatapp-0-bmye.onrender.com/api/auth/register";
 
 export const Register = () => {
   const [user, setUser] = useState({
