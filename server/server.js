@@ -99,7 +99,7 @@ if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(rootDir, "../client/dist")));
 
   // Express 5 uses path-to-regexp v6; use "/*" instead of "*" for catch-all
-  app.get("/*", (req, res) => {
+  app.get("*", (req, res) => {
     res.sendFile(path.join(rootDir, "../client/dist/index.html"));
   });
 }
